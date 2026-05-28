@@ -1,0 +1,38 @@
+PODS:
+  - Flutter (1.0.0)
+  - QBGoogleWebRTC (124.0.2)
+  - QuickBlox (2.22.0)
+  - Quickblox-WebRTC (3.2.1):
+    - QBGoogleWebRTC (>= 124.0)
+    - QuickBlox (>= 2.20)
+  - quickblox_sdk (0.18.5):
+    - Flutter
+    - QuickBlox (~> 2.21)
+    - Quickblox-WebRTC (~> 3.2)
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - quickblox_sdk (from `.symlinks/plugins/quickblox_sdk/ios`)
+
+SPEC REPOS:
+  trunk:
+    - QBGoogleWebRTC
+    - QuickBlox
+    - Quickblox-WebRTC
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  quickblox_sdk:
+    :path: ".symlinks/plugins/quickblox_sdk/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  QBGoogleWebRTC: 1391bfd075620e01512d2c334c7463c03f14467f
+  QuickBlox: efd5c265f0342f7a7be58b7ca59bda6461668018
+  Quickblox-WebRTC: ad6b82b514e502ef12cac493d4909be8c1910601
+  quickblox_sdk: e81f996600ca04617e825a0a635cfca0a36c02b4
+
+PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
+
+COCOAPODS: 1.16.2
