@@ -167,6 +167,7 @@ class QuickBloxService with WidgetsBindingObserver {
             : QBRTCSessionTypes.AUDIO,
         userInfo: {
           'userName': userName,
+          'callerId':opponentIds.first.toString()
         },
       );
 
@@ -196,9 +197,7 @@ class QuickBloxService with WidgetsBindingObserver {
     }
   }
 
-  Future<void> acceptCall({
-    required String sessionId,
-  }) async {
+  Future<void> acceptCall({required String sessionId,}) async {
     try {
       await QB.webrtc.accept(sessionId, userInfo: {});
 
@@ -308,11 +307,11 @@ class QuickBloxService with WidgetsBindingObserver {
         activeSessionId = sessionId;
         remoteUserId = callerId;
 
-        await _showIncomingCallKit(
-          sessionId: sessionId,
-          callerName: userName ?? 'Calling',
-          callerId: callerId.toString(),
-        );
+        // await showIncomingCallKit(
+        //   sessionId: sessionId,
+        //   callerName: userName ?? 'Calling',
+        //   callerId: callerId.toString(),
+        // );
 
         _incomingCallController.add({
           'sessionId': sessionId,
@@ -398,6 +397,10 @@ class QuickBloxService with WidgetsBindingObserver {
       final body = event.body;
 
       final sessionId = body['id'];
+      final Map<String, dynamic> extra = Map<String, dynamic>.from(body['extra'] ?? {});
+
+      final String callerId = extra['callerId']?.toString() ?? '';
+      final String userName = extra['userName']?.toString() ?? 'Calling';
 
       switch (event.event) {
         case Event.actionCallAccept:
@@ -406,15 +409,14 @@ class QuickBloxService with WidgetsBindingObserver {
           }
           break;
 
-        // case Event.actionCallIncoming:
-        //   if (sessionId != null) {
-        //     await _showIncomingCallKit(
-        //         sessionId: sessionId,
-        //         callerName: '',
-        //         callerId: ''
-        //     );
-        //   }
-        //   break;
+        case Event.actionCallIncoming:
+          debugPrint("Event ==> ${event.event}");
+          _incomingCallController.add({
+            'sessionId': sessionId,
+            'callerId': callerId,
+            'userName': userName,
+          });
+          break;
 
         case Event.actionCallDecline:
           if (sessionId != null) {
@@ -436,8 +438,8 @@ class QuickBloxService with WidgetsBindingObserver {
     _callkitInitialized = true;
   }
 
-  Future<void> _showIncomingCallKit({required String sessionId, required String callerName, required String callerId, bool isVideo = true,}) async {
-    //await FlutterCallkitIncoming.endAllCalls();
+  Future<void> showIncomingCallKit({required String sessionId, required String callerName, required String callerId, bool isVideo = true,}) async {
+    await FlutterCallkitIncoming.endAllCalls();
 
     final params = CallKitParams(
       id: sessionId,
@@ -452,11 +454,19 @@ class QuickBloxService with WidgetsBindingObserver {
         'callerId': callerId,
         'userName': callerName,
       },
-      android: const AndroidParams(
+      android: AndroidParams(
         isCustomNotification: true,
         isShowLogo: false,
         isShowCallID: false,
+
         ringtonePath: 'system_ringtone_default',
+
+        backgroundColor: '#0955fa',
+        actionColor: '#4CAF50',
+        textColor: '#ffffff',
+
+        incomingCallNotificationChannelName: callerName,
+        missedCallNotificationChannelName: 'Missed Call',
       ),
       ios: const IOSParams(
         iconName: 'CallKitLogo',
@@ -469,7 +479,7 @@ class QuickBloxService with WidgetsBindingObserver {
     await FlutterCallkitIncoming.showCallkitIncoming(params);
   }
 
-  Future<void> _startOutgoingCallKit({required String sessionId, required String userName, required String userId, bool isVideo = true,}) async {
+  Future<void> startOutgoingCallKit({required String sessionId, required String userName, required String userId, bool isVideo = true,}) async {
     final params = CallKitParams(
       id: sessionId,
       nameCaller: userName,
