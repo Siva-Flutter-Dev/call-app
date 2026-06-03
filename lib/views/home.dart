@@ -33,6 +33,7 @@ class _HomeState extends State<Home> {
       await _qbService.startCall(
         opponentIds: [userId],
         userName: userName,
+        isVideo: false
       );
 
     } catch (e) {

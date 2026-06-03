@@ -84,8 +84,11 @@ class _VideoCallScreenState
             final type =
             event['type'];
 
+            print("type--->$type");
+
             switch (type) {
               case 'rejected':
+              case 'hangup':
               case 'not_answer':
 
                 _closeScreen();
@@ -94,7 +97,6 @@ class _VideoCallScreenState
               case 'video_track':
 
                 _playRemoteVideo();
-
                 break;
             }
           },
@@ -153,16 +155,11 @@ class _VideoCallScreenState
 
   Future<void> _playRemoteVideo() async {
 
-    if (_remoteRendered ||
-        _remoteController == null) {
+    if (_remoteController == null) {
       return;
     }
 
     try {
-
-      setState(() {
-        _remoteRendered = true;
-      });
 
       await Future.delayed(
         const Duration(
@@ -175,7 +172,7 @@ class _VideoCallScreenState
         widget.remoteId,
       );
 
-      _validateConnection();
+      if(mounted) setState(() {});
 
     } catch (e) {
 
