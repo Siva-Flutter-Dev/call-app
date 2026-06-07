@@ -35,8 +35,17 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   quickblox_sdk: ^0.18.5
+  flutter_bloc:
+  equatable:
+
+  get_it:
+  shared_preferences:
   permission_handler:
   flutter_callkit_incoming:
+
+  firebase_core:
+  firebase_messaging:
+
   get:
 
 dev_dependencies:

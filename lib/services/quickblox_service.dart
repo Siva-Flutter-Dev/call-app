@@ -14,6 +14,7 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:quickblox_sdk/auth/constants.dart';
 import 'package:quickblox_sdk/models/qb_session.dart';
+import 'package:quickblox_sdk/models/qb_user.dart';
 import 'package:quickblox_sdk/quickblox_sdk.dart';
 import 'package:quickblox_sdk/webrtc/constants.dart';
 
@@ -88,6 +89,12 @@ class QuickBloxService with WidgetsBindingObserver {
   int? currentUserId;
   String? _email;
   String? _password;
+  String? _recoveredAcceptedSessionId;
+  bool _isRecoveringAcceptedCall = false;
+
+  String? _recoveredSessionId;
+  bool _isRecoveringCall = false;
+  bool _hasNavigatedRecoveredCall = false;
 
   bool _isInitialized = false;
   bool _isLoggedIn = false;
@@ -157,14 +164,42 @@ class QuickBloxService with WidgetsBindingObserver {
     });
   }
 
+  Future<List<QBUser?>> getAllUsersExceptMe(int currentUserId) async {
+    final users = await QB.users.getUsers(
+      page: 1,
+      perPage: 100,
+    );
+
+    return users.where((u) => u != null && u.id != currentUserId).toList();
+  }
+
   /// Check if app was launched from a CallKit notification
   Future<void> _checkForActiveCallOnLaunch() async {
     try {
       final calls = await FlutterCallkitIncoming.activeCalls();
       if (calls is List && calls.isNotEmpty) {
         final call = calls.first;
-        debugPrint('[QB] Active call on launch: ${call['id']}');
-        // The CallKit event listener will handle this
+
+        _recoveredSessionId = call['id']?.toString();
+
+        _isRecoveringCall = true;
+
+        if (_isRecoveringCall &&
+            !_isLoggedIn &&
+            _email != null &&
+            _password != null) {
+
+          debugPrint(
+            '[QB] Recovering call - login required',
+          );
+
+          await login(
+            email: _email!,
+            password: _password!,
+          );
+        }
+
+        debugPrint('[QB] Recovering accepted call: $_recoveredAcceptedSessionId',);
       }
     } catch (e) {
       debugPrint('[QB] Check active calls error: $e');
@@ -455,6 +490,22 @@ class QuickBloxService with WidgetsBindingObserver {
     );
 
     _setCallState(CallState.incoming, call);
+    if (_isRecoveringAcceptedCall && _recoveredAcceptedSessionId == sessionId) {
+
+      debugPrint(
+        '[QB] Recovered accepted call, skip CallKit',
+      );
+
+      Future.delayed(const Duration(milliseconds: 500),
+            () async {
+          await acceptCall(
+            sessionId: sessionId,
+          );
+        },
+      );
+
+      return;
+    }
 
     // Show CallKit incoming call UI
     await _showIncomingCallKit(call);
@@ -637,6 +688,9 @@ class QuickBloxService with WidgetsBindingObserver {
       await FlutterCallkitIncoming.setCallConnected(sessionId);
 
       _setCallState(CallState.connected, _activeCall);
+
+      _isRecoveringAcceptedCall = false;
+      _recoveredAcceptedSessionId = null;
 
       // Navigate to call screen
       if (_activeCall != null) {

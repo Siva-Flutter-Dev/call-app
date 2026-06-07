@@ -1,3 +1,4 @@
+import 'package:app/models/user_model.dart';
 import 'package:flutter/material.dart';
 
 import '../services/quickblox_service.dart';
@@ -12,15 +13,25 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
-  final QuickBloxService _qbService =
-      QuickBloxService.instance;
+  final QuickBloxService _qbService = QuickBloxService.instance;
+  List<Users> appUsers = [];
 
   bool _isCalling = false;
 
-  Future<void> _startCall({
-    required int userId,
-    required String userName,
-  }) async {
+  void getUsers()async{
+    final users = await _qbService.getAllUsersExceptMe(_qbService.currentUserId??0);
+    List<Users> userModels = [];
+    for(var i in users){
+      userModels.add(Users.fromQB(i));
+    }
+    if(mounted) {
+      setState(() {
+        appUsers = userModels;
+      });
+    }
+  }
+
+  Future<void> _startCall({required int userId, required String userName,}) async {
 
     if (_isCalling) return;
 
@@ -53,12 +64,7 @@ class _HomeState extends State<Home> {
     }
   }
 
-  Widget _callCard({
-    required String title,
-    required String subtitle,
-    required int userId,
-    required IconData icon,
-  }) {
+  Widget _callCard({required String title, required String subtitle, required int userId, required IconData icon,}) {
 
     final bool isCurrentUser =
         _qbService.currentUserId ==
@@ -258,121 +264,31 @@ class _HomeState extends State<Home> {
   }
 
   @override
+  void initState() {
+    getUsers();
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
 
     return Scaffold(
-      backgroundColor:
-      const Color(0xFF020617),
+      backgroundColor: const Color(0xFF020617),
 
       body: SafeArea(
         child: Padding(
-          padding:
-          const EdgeInsets.all(22),
+          padding: const EdgeInsets.all(22),
 
           child: Column(
-            crossAxisAlignment:
-            CrossAxisAlignment
-                .start,
-
+            crossAxisAlignment: .start,
             children: [
-
-              /// HEADER
-              Row(
-                children: [
-
-                  Container(
-                    width: 58,
-                    height: 58,
-
-                    decoration:
-                    BoxDecoration(
-                      borderRadius:
-                      BorderRadius
-                          .circular(
-                        18,
-                      ),
-
-                      color: Colors
-                          .white
-                          .withValues(
-                        alpha:
-                        0.08,
-                      ),
-                    ),
-
-                    child: const Icon(
-                      Icons
-                          .video_call_rounded,
-                      color:
-                      Colors.white,
-                      size: 30,
-                    ),
-                  ),
-
-                  const SizedBox(
-                    width: 16,
-                  ),
-
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
-
-                      children: [
-
-                        const Text(
-                          "QuickBlox Calls",
-                          style:
-                          TextStyle(
-                            color: Colors
-                                .white,
-                            fontSize:
-                            28,
-                            fontWeight:
-                            FontWeight
-                                .bold,
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 4,
-                        ),
-
-                        Text(
-                          "Connected User ID : "
-                              "${_qbService.currentUserId ?? '-'}",
-
-                          style:
-                          TextStyle(
-                            color: Colors
-                                .white
-                                .withValues(
-                              alpha:
-                              0.7,
-                            ),
-                            fontSize:
-                            14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
               const SizedBox(height: 40),
-
               Text(
                 "Available Contacts",
                 style: TextStyle(
-                  color: Colors.white
-                      .withValues(
-                    alpha: 0.9,
-                  ),
+                  color: Colors.white.withValues(alpha: .9,),
                   fontSize: 18,
-                  fontWeight:
-                  FontWeight.w600,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
 
@@ -380,84 +296,47 @@ class _HomeState extends State<Home> {
 
               /// CONTACT LIST
               Expanded(
-                child: ListView(
-                  physics:
-                  const BouncingScrollPhysics(),
-
-                  children: [
-
-                    _callCard(
-                      title: "Siva",
-                      subtitle:
-                      "Tap to start video call",
-                      userId: 142487337,
-                      icon:
-                      Icons.person_rounded,
-                    ),
-
-                    _callCard(
-                      title:
-                      "SivaCrafft",
-                      subtitle:
-                      "Tap to start video call",
-                      userId: 142487335,
-                      icon:
-                      Icons.person_outline,
-                    ),
-                  ],
+                child: ListView.builder(
+                  itemCount: appUsers.length,
+                  physics: const BouncingScrollPhysics(),
+                  itemBuilder: (BuildContext context, int index) {
+                    return _callCard(
+                      title: appUsers[index].name,
+                      subtitle: "Tap to start video call",
+                      userId: appUsers[index].id,
+                      icon: Icons.person_rounded,
+                    );
+                  },
                 ),
               ),
 
               /// CALLING LOADER
               if (_isCalling)
                 Container(
-                  padding:
-                  const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 14,
-                  ),
-
-                  decoration:
-                  BoxDecoration(
-                    borderRadius:
-                    BorderRadius.circular(
-                      18,
-                    ),
-
-                    color: Colors.white
-                        .withValues(
-                      alpha: 0.08,
-                    ),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14,),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18,),
+                    color: Colors.white.withValues(alpha: .08,),
                   ),
 
                   child: const Row(
+                    spacing: 12,
                     children: [
-
                       SizedBox(
                         width: 22,
                         height: 22,
-
-                        child:
-                        CircularProgressIndicator(
-                          strokeWidth:
-                          2,
-                          color:
-                          Colors.white,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
                         ),
                       ),
-
-                      SizedBox(width: 14),
-
                       Text(
                         "Starting Call...",
                         style:
                         TextStyle(
-                          color:
-                          Colors.white,
+                          color: Colors.white,
                           fontSize: 15,
-                          fontWeight:
-                          FontWeight
-                              .w500,
+                          fontWeight: .w500,
                         ),
                       ),
                     ],

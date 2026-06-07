@@ -1,3 +1,5 @@
+import 'package:app/services/local_storage.dart';
+import 'package:app/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -28,6 +30,23 @@ class _LoginState extends State<Login> {
 
   bool _obscurePassword = true;
   bool _isLoading = false;
+
+  var prefs = AppPrefs.instance;
+
+  @override
+  void initState() {
+    if(mounted){
+      if(prefs.getBool(AppPrefsKeys.rememberMe)){
+        AuthManager.instance.updateLoginEmail(prefs.getString(AppPrefsKeys.email)??'');
+        AuthManager.instance.updateLoginPassword(prefs.getString(AppPrefsKeys.password)??'');
+        AuthManager.instance.updateLoginStatus(true);
+        Get.offAll(() => const Home(),
+          transition: Transition.fadeIn,
+        );
+      }
+    }
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -71,6 +90,10 @@ class _LoginState extends State<Login> {
     setState(() {
       _isLoading = false;
     });
+
+    prefs.setString(AppPrefsKeys.email, _emailController.text.trim());
+    prefs.setString(AppPrefsKeys.password, _passwordController.text.trim());
+    prefs.setBool(AppPrefsKeys.rememberMe, true);
 
     Get.offAll(
           () => const Home(),
